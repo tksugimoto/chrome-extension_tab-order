@@ -1,0 +1,17 @@
+{
+	"name": "tabOrder",
+	"version": "0.7",
+	"manifest_version": 2,
+
+	"description": "タブの開く位置と閉じたあとの制御(window別)",
+
+	"icons": {
+		"128": "icon/icon.png"
+	},
+
+	"background": {
+		"scripts": [
+			"background.js"
+		]
+	}
+}
