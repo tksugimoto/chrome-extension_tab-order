@@ -118,7 +118,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 		tabId = ActiveTabHistory.last(removeInfo.windowId);
 		if (tabId !== null) {
 			// まだtabが残っている場合
-			tabExist(tabId, () => {
+			checkTabPresence(tabId, () => {
 				activateTab(tabId).then(() => {
 					ActiveTabHistory.enable()
 				});
@@ -153,18 +153,18 @@ const activateTab = tabId => {
 	});
 };
 
-const tabExist = (tabId, fn_exist, fn_not_exist) => {
+const checkTabPresence = (tabId, execIfPresent, execIfNotPresent) => {
 	if (tabId !== null) {
 		chrome.windows.getAll({
 			populate: true
 		}, windows => {
-			const exists = windows.some(window => {
+			const isPresent = windows.some(window => {
 				return window.tabs.some(tab => tab.id === tabId);
 			});
-			if (exists) {
-				if (typeof fn_exist === "function") fn_exist();
+			if (isPresent) {
+				if (typeof execIfPresent === "function") execIfPresent();
 			} else {
-				if (typeof fn_not_exist === "function") fn_not_exist();
+				if (typeof execIfNotPresent === "function") execIfNotPresent();
 			}
 		});
 	}
