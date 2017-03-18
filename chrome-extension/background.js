@@ -67,7 +67,7 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 chrome.tabs.onCreated.addListener(tab => {
 	if (typeof tab.openerTabId !== "undefined") {
 		chrome.tabs.get(tab.openerTabId, openerTab => {
-			move(tab, openerTab.index + 1);
+			moveTabPosition(tab.id, openerTab.index + 1);
 		});
 		return;
 	}
@@ -87,7 +87,7 @@ chrome.tabs.onCreated.addListener(tab => {
 			chrome.tabs.get(baseTabId, baseTab => {
 				// タブの無い（1つだけの）ウィンドウから呼び出された場合別ウィンドウに新規タブができる
 				if (baseTab.windowId === windowId) {
-					move(tab, baseTab.index + 1);
+					moveTabPosition(tab.id, baseTab.index + 1);
 				}
 			});
 		}
@@ -135,9 +135,9 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	func();
 });
 
-const move = (tab, to) => {
-	chrome.tabs.move(tab.id, {
-		index: to
+const moveTabPosition = (tabId, targetPosition) => {
+	chrome.tabs.move(tabId, {
+		index: targetPosition
 	});
 };
 
