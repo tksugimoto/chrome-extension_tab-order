@@ -54,7 +54,7 @@ chrome.tabs.query({
 // タブがウィンドウから出て行った時
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
 	ActiveTabHistory.remove(tabId);
-	show(ActiveTabHistory.last(detachInfo.oldWindowId));
+	activateTab(ActiveTabHistory.last(detachInfo.oldWindowId));
 });
 
 
@@ -119,7 +119,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 		if (tabId !== null) {
 			// まだtabが残っている場合
 			tabExist(tabId, () => {
-				show(tabId).then(() => {
+				activateTab(tabId).then(() => {
 					ActiveTabHistory.enable()
 				});
 			}, () => {
@@ -141,7 +141,7 @@ const moveTabPosition = (tabId, targetPosition) => {
 	});
 };
 
-const show = tabId => {
+const activateTab = tabId => {
 	return new Promise(resolve => {
 		if (tabId !== null) {
 			chrome.tabs.update(tabId, {
