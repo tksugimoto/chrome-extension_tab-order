@@ -114,27 +114,27 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	ActiveTabHistory.remove(tabId);
 	ActiveTabHistory.disable();
 
-	const func = () => {
-		tabId = ActiveTabHistory.getLatestActiveTabId(removeInfo.windowId);
-		if (tabId !== null) {
-			checkTabPresence(tabId, isPresent => {
+	const activateLatestActiveTabIfNeeded = () => {
+		const latestActiveTabId = ActiveTabHistory.getLatestActiveTabId(removeInfo.windowId);
+		if (latestActiveTabId === null) {
+			// Windowごと閉じた or アクティブになったことのあるタブが存在しない時
+			ActiveTabHistory.enable();
+		} else {
+			checkTabPresence(latestActiveTabId, isPresent => {
 				if (isPresent) {
 					// まだtabが残っている場合
-					activateTab(tabId).then(() => {
+					activateTab(latestActiveTabId).then(() => {
 						ActiveTabHistory.enable()
 					});
 				} else {
 					// Windowsごと閉じた時
-					ActiveTabHistory.remove(tabId);
-					func();
+					ActiveTabHistory.remove(latestActiveTabId);
+					activateLatestActiveTabIfNeeded();
 				}
 			});
-		} else {
-			// Windowごと閉じた or アクティブになったことのあるタブが存在しない時
-			ActiveTabHistory.enable();
 		}
 	};
-	func();
+	activateLatestActiveTabIfNeeded();
 });
 
 const moveTabPosition = (tabId, targetPosition) => {
