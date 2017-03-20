@@ -117,15 +117,17 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	const func = () => {
 		tabId = ActiveTabHistory.getLatestActiveTabId(removeInfo.windowId);
 		if (tabId !== null) {
-			// まだtabが残っている場合
-			checkTabPresence(tabId, () => {
-				activateTab(tabId).then(() => {
-					ActiveTabHistory.enable()
-				});
-			}, () => {
-				// Windowsごと閉じた時
-				ActiveTabHistory.remove(tabId);
-				func();
+			checkTabPresence(tabId, isPresent => {
+				if (isPresent) {
+					// まだtabが残っている場合
+					activateTab(tabId).then(() => {
+						ActiveTabHistory.enable()
+					});
+				} else {
+					// Windowsごと閉じた時
+					ActiveTabHistory.remove(tabId);
+					func();
+				}
 			});
 		} else {
 			// Windowごと閉じた or アクティブになったことのあるタブが存在しない時
@@ -153,19 +155,15 @@ const activateTab = tabId => {
 	});
 };
 
-const checkTabPresence = (tabId, execIfPresent, execIfNotPresent) => {
-	if (tabId !== null) {
-		chrome.windows.getAll({
-			populate: true
-		}, windows => {
-			const isPresent = windows.some(window => {
-				return window.tabs.some(tab => tab.id === tabId);
-			});
-			if (isPresent) {
-				if (typeof execIfPresent === "function") execIfPresent();
-			} else {
-				if (typeof execIfNotPresent === "function") execIfNotPresent();
-			}
+const checkTabPresence = (tabId, callback) => {
+	if (!Number.isInteger(tabId)) return;
+	if (typeof callback !== "function") return;
+	chrome.windows.getAll({
+		populate: true
+	}, windows => {
+		const isPresent = windows.some(window => {
+			return window.tabs.some(tab => tab.id === tabId);
 		});
-	}
+		callback(isPresent);
+	});
 };
