@@ -44,7 +44,7 @@ const ActiveTabHistory = (() => {
 
 // 今アクティブなページ全部データに突っ込む
 chrome.tabs.query({
-	active: true
+	active: true,
 }, tabs => {
 	tabs.forEach(tab => {
 		ActiveTabHistory.add(tab.id, tab.windowId);
@@ -100,7 +100,7 @@ chrome.windows.onCreated.addListener(createdWindow => {
 
 	chrome.tabs.query({
 		windowId: windowId,
-		active: true
+		active: true,
 	}, tabs => {
 		if (tabs.length === 1) {
 			const tab = tabs[0];
@@ -139,7 +139,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 const moveTabPosition = (tabId, targetPosition) => {
 	chrome.tabs.move(tabId, {
-		index: targetPosition
+		index: targetPosition,
 	});
 };
 
@@ -147,7 +147,7 @@ const activateTab = tabId => {
 	return new Promise(resolve => {
 		if (tabId !== null) {
 			chrome.tabs.update(tabId, {
-				active : true
+				active : true,
 			}, resolve);
 		} else {
 			resolve();
@@ -159,7 +159,7 @@ const checkTabPresence = (tabId, callback) => {
 	if (!Number.isInteger(tabId)) return;
 	if (typeof callback !== "function") return;
 	chrome.windows.getAll({
-		populate: true
+		populate: true,
 	}, windows => {
 		const isPresent = windows.some(window => {
 			return window.tabs.some(tab => tab.id === tabId);
