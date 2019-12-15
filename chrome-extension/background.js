@@ -26,7 +26,7 @@ const ActiveTabHistory = (() => {
 			if (i !== -1) {
 				// i番目の要素を削除
 				_arr_win.splice(i, 1);
-				delete hashHist[tabId]
+				delete hashHist[tabId];
 				if (_arr_win.length === 0) delete arrayHist[windowId];
 			}
 		}
@@ -124,7 +124,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 				if (isPresent) {
 					// まだtabが残っている場合
 					activateTab(latestActiveTabId).then(() => {
-						ActiveTabHistory.enable()
+						ActiveTabHistory.enable();
 					});
 				} else {
 					// Windowsごと閉じた時
