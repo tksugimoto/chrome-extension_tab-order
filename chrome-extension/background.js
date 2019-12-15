@@ -99,7 +99,7 @@ chrome.windows.onCreated.addListener(createdWindow => {
 	const windowId = createdWindow.id;
 
 	chrome.tabs.query({
-		windowId: windowId,
+		windowId,
 		active: true,
 	}, tabs => {
 		if (tabs.length === 1) {
