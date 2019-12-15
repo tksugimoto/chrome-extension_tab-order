@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const ActiveTabHistory = (() => {
 	const arrayHist = {};
@@ -6,7 +6,7 @@ const ActiveTabHistory = (() => {
 	const obj = {};
 	let inOperation = true;
 	obj.add = (tabId, windowId) => {
-		if (typeof windowId === "number" && typeof tabId === "number" && inOperation){
+		if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
 			obj.remove(tabId);
 			if (!arrayHist[windowId]) arrayHist[windowId] = [];
 			arrayHist[windowId].push(tabId);
@@ -26,7 +26,7 @@ const ActiveTabHistory = (() => {
 			if (i !== -1) {
 				// i番目の要素を削除
 				_arr_win.splice(i, 1);
-				delete hashHist[tabId]
+				delete hashHist[tabId];
 				if (_arr_win.length === 0) delete arrayHist[windowId];
 			}
 		}
@@ -44,7 +44,7 @@ const ActiveTabHistory = (() => {
 
 // 今アクティブなページ全部データに突っ込む
 chrome.tabs.query({
-	active: true
+	active: true,
 }, tabs => {
 	tabs.forEach(tab => {
 		ActiveTabHistory.add(tab.id, tab.windowId);
@@ -65,7 +65,7 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 
 // タブが開いた時
 chrome.tabs.onCreated.addListener(tab => {
-	if (typeof tab.openerTabId !== "undefined") {
+	if (typeof tab.openerTabId !== 'undefined') {
 		chrome.tabs.get(tab.openerTabId, openerTab => {
 			moveTabPosition(tab.id, openerTab.index + 1);
 		});
@@ -80,7 +80,7 @@ chrome.tabs.onCreated.addListener(tab => {
 	let baseTabId = dropped ? null : ActiveTabHistory.getLatestActiveTabId(windowId);
 	chrome.tabs.get(tab.id, tab => {
 		// 別の拡張からcreateされた場合にonCreated時点ではopenerTabIdが付与されていないのでtabs.getした
-		if (typeof tab.openerTabId !== "undefined") {
+		if (typeof tab.openerTabId !== 'undefined') {
 			baseTabId = tab.openerTabId;
 		}
 		if (baseTabId !== null) {
@@ -99,8 +99,8 @@ chrome.windows.onCreated.addListener(createdWindow => {
 	const windowId = createdWindow.id;
 
 	chrome.tabs.query({
-		windowId: windowId,
-		active: true
+		windowId,
+		active: true,
 	}, tabs => {
 		if (tabs.length === 1) {
 			const tab = tabs[0];
@@ -124,7 +124,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 				if (isPresent) {
 					// まだtabが残っている場合
 					activateTab(latestActiveTabId).then(() => {
-						ActiveTabHistory.enable()
+						ActiveTabHistory.enable();
 					});
 				} else {
 					// Windowsごと閉じた時
@@ -139,7 +139,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 const moveTabPosition = (tabId, targetPosition) => {
 	chrome.tabs.move(tabId, {
-		index: targetPosition
+		index: targetPosition,
 	});
 };
 
@@ -147,7 +147,7 @@ const activateTab = tabId => {
 	return new Promise(resolve => {
 		if (tabId !== null) {
 			chrome.tabs.update(tabId, {
-				active : true
+				active : true,
 			}, resolve);
 		} else {
 			resolve();
@@ -157,9 +157,9 @@ const activateTab = tabId => {
 
 const checkTabPresence = (tabId, callback) => {
 	if (!Number.isInteger(tabId)) return;
-	if (typeof callback !== "function") return;
+	if (typeof callback !== 'function') return;
 	chrome.windows.getAll({
-		populate: true
+		populate: true,
 	}, windows => {
 		const isPresent = windows.some(window => {
 			return window.tabs.some(tab => tab.id === tabId);
