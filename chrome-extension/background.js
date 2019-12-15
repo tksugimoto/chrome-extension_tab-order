@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 const ActiveTabHistory = (() => {
 	const arrayHist = {};
@@ -6,7 +6,7 @@ const ActiveTabHistory = (() => {
 	const obj = {};
 	let inOperation = true;
 	obj.add = (tabId, windowId) => {
-		if (typeof windowId === "number" && typeof tabId === "number" && inOperation){
+		if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
 			obj.remove(tabId);
 			if (!arrayHist[windowId]) arrayHist[windowId] = [];
 			arrayHist[windowId].push(tabId);
@@ -65,7 +65,7 @@ chrome.tabs.onActivated.addListener(activeInfo => {
 
 // タブが開いた時
 chrome.tabs.onCreated.addListener(tab => {
-	if (typeof tab.openerTabId !== "undefined") {
+	if (typeof tab.openerTabId !== 'undefined') {
 		chrome.tabs.get(tab.openerTabId, openerTab => {
 			moveTabPosition(tab.id, openerTab.index + 1);
 		});
@@ -80,7 +80,7 @@ chrome.tabs.onCreated.addListener(tab => {
 	let baseTabId = dropped ? null : ActiveTabHistory.getLatestActiveTabId(windowId);
 	chrome.tabs.get(tab.id, tab => {
 		// 別の拡張からcreateされた場合にonCreated時点ではopenerTabIdが付与されていないのでtabs.getした
-		if (typeof tab.openerTabId !== "undefined") {
+		if (typeof tab.openerTabId !== 'undefined') {
 			baseTabId = tab.openerTabId;
 		}
 		if (baseTabId !== null) {
@@ -157,7 +157,7 @@ const activateTab = tabId => {
 
 const checkTabPresence = (tabId, callback) => {
 	if (!Number.isInteger(tabId)) return;
-	if (typeof callback !== "function") return;
+	if (typeof callback !== 'function') return;
 	chrome.windows.getAll({
 		populate: true,
 	}, windows => {
