@@ -78,10 +78,10 @@ chrome.tabs.onCreated.addListener(tab => {
 	// ・リンク・ブックマークをクリックで開いた場合：位置を移動する
 	const dropped = tab.active;
 	let baseTabId = dropped ? null : ActiveTabHistory.getLatestActiveTabId(windowId);
-	chrome.tabs.get(tab.id, tab => {
+	chrome.tabs.get(tab.id, ({ openerTabId }) => {
 		// 別の拡張からcreateされた場合にonCreated時点ではopenerTabIdが付与されていないのでtabs.getした
-		if (typeof tab.openerTabId !== 'undefined') {
-			baseTabId = tab.openerTabId;
+		if (typeof openerTabId !== 'undefined') {
+			baseTabId = openerTabId;
 		}
 		if (baseTabId !== null) {
 			chrome.tabs.get(baseTabId, baseTab => {
