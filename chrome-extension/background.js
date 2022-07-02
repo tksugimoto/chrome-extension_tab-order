@@ -1,24 +1,57 @@
 'use strict';
 
 const ActiveTabHistory = (() => {
-	const tabListOfWindow = {};
-	const windowIdOfTab = {};
+	let tabListOfWindow = {};
+	let windowIdOfTab = {};
 	const obj = {};
 	let inOperation = true;
+	let promise = Promise.resolve();
+	const _load = () => {
+		return new Promise(resolve => {
+			chrome.storage.local.get({
+				tabListOfWindow: {},
+				windowIdOfTab: {},
+			}, items => {
+				tabListOfWindow = items.tabListOfWindow;
+				windowIdOfTab = items.windowIdOfTab;
+				resolve();
+			});
+		});
+	};
+	const _save = () => {
+		return new Promise(resolve => {
+			chrome.storage.local.set({
+				tabListOfWindow,
+				windowIdOfTab,
+			}, resolve);
+		});
+	};
+	obj.load = () => {
+		promise = promise.then(() => {
+			return _load();
+		});
+		return promise;
+	};
 	obj.add = (tabId, windowId) => {
-		if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
-			obj.remove(tabId);
-			if (!tabListOfWindow[windowId]) tabListOfWindow[windowId] = [];
-			tabListOfWindow[windowId].push(tabId);
-			windowIdOfTab[tabId] = windowId;
-		}
+		promise = promise.then(() => {
+			if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
+				_remove(tabId);
+				if (!tabListOfWindow[windowId]) tabListOfWindow[windowId] = [];
+				tabListOfWindow[windowId].push(tabId);
+				windowIdOfTab[tabId] = windowId;
+				return _save(); // TODO: 効率化 (addを連続で呼ばれた場合に都度保存は非効率)
+			}
+		});
+		return promise;
 	};
 	obj.getLatestActiveTabId = windowId => {
-		// 最後のtabが閉じた＝windowが閉じたらnullが帰る
-		const _arr_win = tabListOfWindow[windowId];
-		return Promise.resolve(_arr_win ? _arr_win[_arr_win.length - 1] : null);
+		return promise.then(() => {
+			// 最後のtabが閉じた＝windowが閉じたらnullが帰る
+			const _arr_win = tabListOfWindow[windowId];
+			return _arr_win ? _arr_win[_arr_win.length - 1] : null;
+		});
 	};
-	obj.remove = tabId => {
+	const _remove = tabId => {
 		if (tabId in windowIdOfTab) {
 			const windowId = windowIdOfTab[tabId];
 			const _arr_win = tabListOfWindow[windowId];
@@ -31,25 +64,54 @@ const ActiveTabHistory = (() => {
 			}
 		}
 	};
+	obj.remove = tabId => {
+		promise = promise.then(() => {
+			_remove(tabId);
+			return _save();
+		});
+		return promise;
+	};
+	obj.clear = () => {
+		promise = promise.then(() => {
+			tabListOfWindow = {};
+			windowIdOfTab = {};
+			inOperation = true;
+		});
+		return promise;
+	};
 	obj.disable = () => {
-		inOperation = false;
+		promise = promise.then(() => {
+			inOperation = false;
+		});
+		return promise;
 	};
 	obj.enable = () => {
-		inOperation = true;
+		promise = promise.then(() => {
+			inOperation = true;
+		});
+		return promise;
 	};
 
 	return obj;
 })();
 
+ActiveTabHistory.load();
 
-// 今アクティブなページ全部データに突っ込む
-chrome.tabs.query({
-	active: true,
-}, tabs => {
-	tabs.forEach(tab => {
-		ActiveTabHistory.add(tab.id, tab.windowId);
+const initialize = () => {
+	ActiveTabHistory.clear().then(() => {
+		// 今アクティブなページ全部データに突っ込む
+		chrome.tabs.query({
+			active: true,
+		}, tabs => {
+			tabs.forEach(tab => {
+				ActiveTabHistory.add(tab.id, tab.windowId);
+			});
+		});
 	});
-});
+};
+chrome.runtime.onInstalled.addListener(initialize);
+chrome.runtime.onStartup.addListener(initialize);
+
 
 // タブがウィンドウから出て行った時
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
