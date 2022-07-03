@@ -16,7 +16,7 @@ const ActiveTabHistory = (() => {
 	obj.getLatestActiveTabId = windowId => {
 		// 最後のtabが閉じた＝windowが閉じたらnullが帰る
 		const _arr_win = arrayHist[windowId];
-		return _arr_win ? _arr_win[_arr_win.length - 1] : null;
+		return Promise.resolve(_arr_win ? _arr_win[_arr_win.length - 1] : null);
 	};
 	obj.remove = tabId => {
 		if (tabId in hashHist) {
@@ -54,7 +54,7 @@ chrome.tabs.query({
 // タブがウィンドウから出て行った時
 chrome.tabs.onDetached.addListener((tabId, detachInfo) => {
 	ActiveTabHistory.remove(tabId);
-	activateTab(ActiveTabHistory.getLatestActiveTabId(detachInfo.oldWindowId));
+	ActiveTabHistory.getLatestActiveTabId(detachInfo.oldWindowId).then(activateTab);
 });
 
 
@@ -77,20 +77,21 @@ chrome.tabs.onCreated.addListener(tab => {
 	//		active で判別（ドロップ時true）
 	// ・リンク・ブックマークをクリックで開いた場合：位置を移動する
 	const dropped = tab.active;
-	let baseTabId = dropped ? null : ActiveTabHistory.getLatestActiveTabId(windowId);
-	chrome.tabs.get(tab.id, ({ openerTabId }) => {
-		// 別の拡張からcreateされた場合にonCreated時点ではopenerTabIdが付与されていないのでtabs.getした
-		if (typeof openerTabId !== 'undefined') {
-			baseTabId = openerTabId;
-		}
-		if (baseTabId !== null) {
-			chrome.tabs.get(baseTabId, baseTab => {
-				// タブの無い（1つだけの）ウィンドウから呼び出された場合別ウィンドウに新規タブができる
-				if (baseTab.windowId === windowId) {
-					moveTabPosition(tab.id, baseTab.index + 1);
-				}
-			});
-		}
+	(dropped ? Promise.resolve(null) : ActiveTabHistory.getLatestActiveTabId(windowId)).then(baseTabId => {
+		chrome.tabs.get(tab.id, ({ openerTabId }) => {
+			// 別の拡張からcreateされた場合にonCreated時点ではopenerTabIdが付与されていないのでtabs.getした
+			if (typeof openerTabId !== 'undefined') {
+				baseTabId = openerTabId;
+			}
+			if (baseTabId !== null) {
+				chrome.tabs.get(baseTabId, baseTab => {
+					// タブの無い（1つだけの）ウィンドウから呼び出された場合別ウィンドウに新規タブができる
+					if (baseTab.windowId === windowId) {
+						moveTabPosition(tab.id, baseTab.index + 1);
+					}
+				});
+			}
+		});
 	});
 });
 
@@ -114,8 +115,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	ActiveTabHistory.remove(tabId);
 	ActiveTabHistory.disable();
 
-	const activateLatestActiveTabIfNeeded = () => {
-		const latestActiveTabId = ActiveTabHistory.getLatestActiveTabId(removeInfo.windowId);
+	const activateLatestActiveTabIfNeeded = () => ActiveTabHistory.getLatestActiveTabId(removeInfo.windowId).then(latestActiveTabId => {
 		if (latestActiveTabId === null) {
 			// Windowごと閉じた or アクティブになったことのあるタブが存在しない時
 			ActiveTabHistory.enable();
@@ -133,7 +133,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 				}
 			});
 		}
-	};
+	});
 	activateLatestActiveTabIfNeeded();
 });
 
