@@ -1,33 +1,33 @@
 'use strict';
 
 const ActiveTabHistory = (() => {
-	const arrayHist = {};
-	const hashHist = {};
+	const tabListOfWindow = {};
+	const windowIdOfTab = {};
 	const obj = {};
 	let inOperation = true;
 	obj.add = (tabId, windowId) => {
 		if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
 			obj.remove(tabId);
-			if (!arrayHist[windowId]) arrayHist[windowId] = [];
-			arrayHist[windowId].push(tabId);
-			hashHist[tabId] = windowId;
+			if (!tabListOfWindow[windowId]) tabListOfWindow[windowId] = [];
+			tabListOfWindow[windowId].push(tabId);
+			windowIdOfTab[tabId] = windowId;
 		}
 	};
 	obj.getLatestActiveTabId = windowId => {
 		// 最後のtabが閉じた＝windowが閉じたらnullが帰る
-		const _arr_win = arrayHist[windowId];
+		const _arr_win = tabListOfWindow[windowId];
 		return Promise.resolve(_arr_win ? _arr_win[_arr_win.length - 1] : null);
 	};
 	obj.remove = tabId => {
-		if (tabId in hashHist) {
-			const windowId = hashHist[tabId];
-			const _arr_win = arrayHist[windowId];
+		if (tabId in windowIdOfTab) {
+			const windowId = windowIdOfTab[tabId];
+			const _arr_win = tabListOfWindow[windowId];
 			const i = _arr_win.indexOf(tabId);
 			if (i !== -1) {
 				// i番目の要素を削除
 				_arr_win.splice(i, 1);
-				delete hashHist[tabId];
-				if (_arr_win.length === 0) delete arrayHist[windowId];
+				delete windowIdOfTab[tabId];
+				if (_arr_win.length === 0) delete tabListOfWindow[windowId];
 			}
 		}
 	};
