@@ -1,29 +1,27 @@
 'use strict';
 
 const ActiveTabHistory = (() => {
-	let tabListOfWindow = {};
-	let windowIdOfTab = {};
 	const obj = {};
 	let inOperation = true;
-	let promise = Promise.resolve();
+	let promise = Promise.resolve({
+		tabListOfWindow: {},
+		windowIdOfTab: {},
+	});
 	const _load = () => {
 		return new Promise(resolve => {
 			chrome.storage.local.get({
 				tabListOfWindow: {},
 				windowIdOfTab: {},
 			}, items => {
-				tabListOfWindow = items.tabListOfWindow;
-				windowIdOfTab = items.windowIdOfTab;
-				resolve();
+				resolve(items);
 			});
 		});
 	};
-	const _save = () => {
+	const _save = (context) => {
 		return new Promise(resolve => {
-			chrome.storage.local.set({
-				tabListOfWindow,
-				windowIdOfTab,
-			}, resolve);
+			chrome.storage.local.set(context, () => {
+				resolve(context);
+			});
 		});
 	};
 	obj.load = () => {
@@ -33,61 +31,65 @@ const ActiveTabHistory = (() => {
 		return promise;
 	};
 	obj.add = (tabId, windowId) => {
-		promise = promise.then(() => {
+		promise = promise.then(context => {
 			if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
-				_remove(tabId);
-				if (!tabListOfWindow[windowId]) tabListOfWindow[windowId] = [];
-				tabListOfWindow[windowId].push(tabId);
-				windowIdOfTab[tabId] = windowId;
-				return _save(); // TODO: 効率化 (addを連続で呼ばれた場合に都度保存は非効率)
+				_remove(tabId, context);
+				if (!context.tabListOfWindow[windowId]) context.tabListOfWindow[windowId] = [];
+				context.tabListOfWindow[windowId].push(tabId);
+				context.windowIdOfTab[tabId] = windowId;
+				return _save(context); // TODO: 効率化 (addを連続で呼ばれた場合に都度保存は非効率)
 			}
+			return context;
 		});
 		return promise;
 	};
 	obj.getLatestActiveTabId = windowId => {
-		return promise.then(() => {
+		return promise.then(context => {
 			// 最後のtabが閉じた＝windowが閉じたらnullが帰る
-			const _arr_win = tabListOfWindow[windowId];
+			const _arr_win = context.tabListOfWindow[windowId];
 			return _arr_win ? _arr_win[_arr_win.length - 1] : null;
 		});
 	};
-	const _remove = tabId => {
-		if (tabId in windowIdOfTab) {
-			const windowId = windowIdOfTab[tabId];
-			const _arr_win = tabListOfWindow[windowId];
+	const _remove = (tabId, context) => {
+		if (tabId in context.windowIdOfTab) {
+			const windowId = context.windowIdOfTab[tabId];
+			const _arr_win = context.tabListOfWindow[windowId];
 			const i = _arr_win.indexOf(tabId);
 			if (i !== -1) {
 				// i番目の要素を削除
 				_arr_win.splice(i, 1);
-				delete windowIdOfTab[tabId];
-				if (_arr_win.length === 0) delete tabListOfWindow[windowId];
+				delete context.windowIdOfTab[tabId];
+				if (_arr_win.length === 0) delete context.tabListOfWindow[windowId];
 			}
 		}
 	};
 	obj.remove = tabId => {
-		promise = promise.then(() => {
-			_remove(tabId);
-			return _save();
+		promise = promise.then(context => {
+			_remove(tabId, context);
+			return _save(context);
 		});
 		return promise;
 	};
 	obj.clear = () => {
-		promise = promise.then(() => {
-			tabListOfWindow = {};
-			windowIdOfTab = {};
+		promise = promise.then(context => {
+			context.tabListOfWindow = {};
+			context.windowIdOfTab = {};
 			inOperation = true;
+			return context;
 		});
 		return promise;
 	};
 	obj.disable = () => {
-		promise = promise.then(() => {
+		promise = promise.then(context => {
 			inOperation = false;
+			return context;
 		});
 		return promise;
 	};
 	obj.enable = () => {
-		promise = promise.then(() => {
+		promise = promise.then(context => {
 			inOperation = true;
+			return context;
 		});
 		return promise;
 	};
