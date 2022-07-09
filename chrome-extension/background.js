@@ -29,15 +29,11 @@ const ActiveTabHistory = (() => {
 		});
 	};
 	const _save = (context) => {
-		return new Promise(resolve => {
-			const itemToSave = {
-				tabListOfWindow: context.tabListOfWindow,
-				windowIdOfTab: context.windowIdOfTab,
-			};
-			chrome.storage.local.set(itemToSave, () => {
-				resolve(context);
-			});
-		});
+		const itemToSave = {
+			tabListOfWindow: context.tabListOfWindow,
+			windowIdOfTab: context.windowIdOfTab,
+		};
+		chrome.storage.local.set(itemToSave);
 	};
 	obj.load = () => {
 		promise = promise.then(() => {
@@ -52,7 +48,7 @@ const ActiveTabHistory = (() => {
 				if (!context.tabListOfWindow[windowId]) context.tabListOfWindow[windowId] = [];
 				context.tabListOfWindow[windowId].push(tabId);
 				context.windowIdOfTab[tabId] = windowId;
-				return _save(context); // TODO: 効率化 (addを連続で呼ばれた場合に都度保存は非効率)
+				_save(context); // TODO: 効率化 (addを連続で呼ばれた場合に都度保存は非効率)
 			}
 			return context;
 		});
@@ -81,7 +77,8 @@ const ActiveTabHistory = (() => {
 	obj.remove = tabId => {
 		promise = promise.then(context => {
 			_remove(tabId, context);
-			return _save(context);
+			_save(context);
+			return context;
 		});
 		return promise;
 	};
