@@ -2,10 +2,10 @@
 
 const ActiveTabHistory = (() => {
 	const obj = {};
-	let inOperation = true;
 	let promise = Promise.resolve({
 		tabListOfWindow: {},
 		windowIdOfTab: {},
+		inOperation: true,
 	});
 	const _load = () => {
 		return new Promise(resolve => {
@@ -13,13 +13,21 @@ const ActiveTabHistory = (() => {
 				tabListOfWindow: {},
 				windowIdOfTab: {},
 			}, items => {
-				resolve(items);
+				resolve({
+					tabListOfWindow: items.tabListOfWindow,
+					windowIdOfTab: items.windowIdOfTab,
+					inOperation: true,
+				});
 			});
 		});
 	};
 	const _save = (context) => {
 		return new Promise(resolve => {
-			chrome.storage.local.set(context, () => {
+			const itemToSave = {
+				tabListOfWindow: context.tabListOfWindow,
+				windowIdOfTab: context.windowIdOfTab,
+			};
+			chrome.storage.local.set(itemToSave, () => {
 				resolve(context);
 			});
 		});
@@ -32,7 +40,7 @@ const ActiveTabHistory = (() => {
 	};
 	obj.add = (tabId, windowId) => {
 		promise = promise.then(context => {
-			if (typeof windowId === 'number' && typeof tabId === 'number' && inOperation){
+			if (typeof windowId === 'number' && typeof tabId === 'number' && context.inOperation){
 				_remove(tabId, context);
 				if (!context.tabListOfWindow[windowId]) context.tabListOfWindow[windowId] = [];
 				context.tabListOfWindow[windowId].push(tabId);
@@ -74,21 +82,21 @@ const ActiveTabHistory = (() => {
 		promise = promise.then(context => {
 			context.tabListOfWindow = {};
 			context.windowIdOfTab = {};
-			inOperation = true;
+			context.inOperation = true;
 			return context;
 		});
 		return promise;
 	};
 	obj.disable = () => {
 		promise = promise.then(context => {
-			inOperation = false;
+			context.inOperation = false;
 			return context;
 		});
 		return promise;
 	};
 	obj.enable = () => {
 		promise = promise.then(context => {
-			inOperation = true;
+			context.inOperation = true;
 			return context;
 		});
 		return promise;
