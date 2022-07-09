@@ -2,22 +2,29 @@
 
 const ActiveTabHistory = (() => {
 	const obj = {};
-	let promise = Promise.resolve({
-		tabListOfWindow: {},
-		windowIdOfTab: {},
-		inOperation: true,
-	});
+	class Context {
+		constructor({
+			tabListOfWindow = {},
+			windowIdOfTab = {},
+		} = {}) {
+			this.tabListOfWindow = tabListOfWindow;
+			this.windowIdOfTab = windowIdOfTab;
+			this.inOperation = true;
+		}
+		reset() {
+			this.tabListOfWindow = {};
+			this.windowIdOfTab = {};
+			this.inOperation = true;
+		}
+	}
+	let promise = Promise.resolve(new Context());
 	const _load = () => {
 		return new Promise(resolve => {
-			chrome.storage.local.get({
-				tabListOfWindow: {},
-				windowIdOfTab: {},
-			}, items => {
-				resolve({
-					tabListOfWindow: items.tabListOfWindow,
-					windowIdOfTab: items.windowIdOfTab,
-					inOperation: true,
-				});
+			chrome.storage.local.get([
+				'tabListOfWindow',
+				'windowIdOfTab',
+			], items => {
+				resolve(new Context(items));
 			});
 		});
 	};
@@ -80,9 +87,7 @@ const ActiveTabHistory = (() => {
 	};
 	obj.clear = () => {
 		promise = promise.then(context => {
-			context.tabListOfWindow = {};
-			context.windowIdOfTab = {};
-			context.inOperation = true;
+			context.reset();
 			return context;
 		});
 		return promise;
