@@ -11,11 +11,6 @@ const ActiveTabHistory = (() => {
 			this.windowIdOfTab = windowIdOfTab;
 			this.inOperation = true;
 		}
-		reset() {
-			this.tabListOfWindow = {};
-			this.windowIdOfTab = {};
-			this.inOperation = true;
-		}
 	}
 	let promise = Promise.resolve(new Context());
 	const _load = () => {
@@ -83,9 +78,8 @@ const ActiveTabHistory = (() => {
 		return promise;
 	};
 	obj.clear = () => {
-		promise = promise.then(context => {
-			context.reset();
-			return context;
+		promise = promise.then(() => {
+			return new Context();
 		});
 		return promise;
 	};
