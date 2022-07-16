@@ -1,7 +1,7 @@
 {
 	"name": "Control tab order",
 	"version": "0.7",
-	"manifest_version": 2,
+	"manifest_version": 3,
 
 	"description": "タブの開く位置と閉じたあとの制御(window別)",
 
@@ -10,9 +10,6 @@
 	],
 
 	"background": {
-		"persistent": false,
-		"scripts": [
-			"background.js"
-		]
+		"service_worker": "background.js"
 	}
 }
