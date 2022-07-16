@@ -5,7 +5,12 @@
 
 	"description": "タブの開く位置と閉じたあとの制御(window別)",
 
+	"permissions": [
+		"storage"
+	],
+
 	"background": {
+		"persistent": false,
 		"scripts": [
 			"background.js"
 		]
