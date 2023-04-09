@@ -37,13 +37,17 @@ const ActiveTabHistory = (() => {
 		};
 	})();
 	obj.load = () => {
+		console.log('load', 'called');
 		promise = promise.then(() => {
+			console.log('load', 'then');
 			return _load();
 		});
 		return promise;
 	};
 	obj.add = (tabId, windowId) => {
+		console.log('add', 'called', {tabId, windowId});
 		promise = promise.then(context => {
+			console.log('add', 'then', {tabId, windowId}, context);
 			if (typeof windowId === 'number' && typeof tabId === 'number' && context.inOperation){
 				_remove(tabId, context);
 				if (!context.tabListOfWindow[windowId]) context.tabListOfWindow[windowId] = [];
@@ -56,7 +60,9 @@ const ActiveTabHistory = (() => {
 		return promise;
 	};
 	obj.getLatestActiveTabId = windowId => {
+		console.log('getLatestActiveTabId', 'called', windowId);
 		return promise.then(context => {
+			console.log('getLatestActiveTabId', 'then', windowId, context);
 			// 最後のtabが閉じた＝windowが閉じたらnullが帰る
 			const _arr_win = context.tabListOfWindow[windowId];
 			return _arr_win ? _arr_win[_arr_win.length - 1] : null;
@@ -76,7 +82,9 @@ const ActiveTabHistory = (() => {
 		}
 	};
 	obj.remove = tabId => {
+		console.log('remove', 'called', tabId);
 		promise = promise.then(context => {
+			console.log('remove', 'then', tabId, context);
 			_remove(tabId, context);
 			_saveAsync(context);
 			return context;
@@ -84,20 +92,26 @@ const ActiveTabHistory = (() => {
 		return promise;
 	};
 	obj.clear = () => {
-		promise = promise.then(() => {
+		console.log('clear', 'called');
+		promise = promise.then((context) => {
+			console.log('clear', 'then', context);
 			return new Context();
 		});
 		return promise;
 	};
 	obj.disable = () => {
+		console.log('disable', 'called');
 		promise = promise.then(context => {
+			console.log('disable', 'then', context);
 			context.inOperation = false;
 			return context;
 		});
 		return promise;
 	};
 	obj.enable = () => {
+		console.log('enable', 'called');
 		promise = promise.then(context => {
+			console.log('enable', 'then', context);
 			context.inOperation = true;
 			return context;
 		});
