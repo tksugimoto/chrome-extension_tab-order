@@ -14,11 +14,14 @@ const ActiveTabHistory = (() => {
 	}
 	let promise = Promise.resolve(new Context());
 	const _load = () => {
+		console.log('_load', 'called');
 		return new Promise(resolve => {
+			console.log('_load', 'new Promise');
 			chrome.storage.local.get([
 				'tabListOfWindow',
 				'windowIdOfTab',
 			], items => {
+				console.log('_load', 'resolve');
 				resolve(new Context(items));
 			});
 		});
